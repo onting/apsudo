@@ -48,6 +48,30 @@ int main(int argc, char** argv)
     }
 }
 
+int init()
+{
+    char ip_addr[16];
+    int port_num;
+    FILE *fptr;
+
+    if(getuid() != geteuid()){
+        printf("Permission denied.\n");
+        printf("Run commend as root.\n");
+        return -1;
+    }
+
+    printf("Enter the IP Address >> ");
+    scanf("%s", ip_addr);
+    printf("Enter the Port number >> ");
+    scanf("%d", port_num);
+
+    fptr = fopen("apsudo.config", "w");
+    fprintf(fptr, "%s:%d", ip_addr, port_num);
+    fclose(fptr);
+    
+    return 0;
+}
+
 int request(char* commend)
 {
     int sock;
