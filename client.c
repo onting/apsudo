@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
 
 #define BUF_SIZE 64
 
@@ -24,20 +25,51 @@ int run();
 int main(int argc, char** argv)
 {
     enum operation operation;
-    char commend[BUF_SIZE];
+    char command[BUF_SIZE];
+    int c, i;
+    
+    static struct option long_options[] =
+    {
+        {"init", no_argument, 0, 'i'},
+        {"ls_pending", no_argument, 0, 'l'},
+        {"run", no_argument, 0, 'r'},
+        {0, 0, 0, 0}
+    };
 
-    if(argc > 2){
-        printf("Too many arguments.\n");
-        return 1;
+    int option_index = 0;
+
+    c = getopt_long(argc, argv, "", long_options, &option_index);
+
+    switch(c)
+    {
+        case 'i':
+        operation = INIT; break;
+        case 'l':
+        operation = LS_PENDING; break;
+        case 'r':
+        operation = RUN; break;
+        case '?':
+        break;
+        default:
+        operation = REQUEST;
     }
-    //parse option
 
     switch(operation)
     {
         case INIT:
         return init();
         case REQUEST:
-        return request(commend);
+        if(argc < 2){
+            printf("Enter your command.\n");
+            return 0;
+        }
+        strcpy(command, argv[1]);
+        for(i=2; i<argc; i++){
+            strcat(command, " ");
+            strcat(command, argv[i]);
+        }
+        printf("%s\n", command);
+        return request(command);
         case LS_PENDING:
         return ls_pending();
         case RUN:
@@ -56,7 +88,7 @@ int init()
 
     if(getuid() != geteuid()){
         printf("Permission denied.\n");
-        printf("Run commend as root.\n");
+        printf("Run command as root.\n");
         return -1;
     }
 
@@ -72,7 +104,7 @@ int init()
     return 0;
 }
 
-int request(char* commend)
+int request(char* command)
 {
     int sock;
     ssize_t len;
@@ -91,17 +123,17 @@ int request(char* commend)
 
     fptr = fopen("apsudo.config", "r");
     fgets(temp, sizeof(temp), fptr);
-    tok = strtok("temp", ":");
+    tok = strtok(temp, ":");
     if(!tok){
         printf("apsudo.config is broken.\n");
-        printf("To recover run \'apsudo --init\' commend.\n");
+        printf("To recover run \'apsudo --init\' command.\n");
         return -1;
     }
     strcpy(ip_addr, tok);
     tok = strtok(NULL, ":");
     if(!tok){
         printf("apsudo.config is broken.\n");
-        printf("To recover run \'apsudo --init\' commend.\n");
+        printf("To recover run \'apsudo --init\' command.\n");
         return -1;
     }
     port_num = atoi(tok);
@@ -125,10 +157,10 @@ int request(char* commend)
         return -1;
     }
 
-    len = write(sock, commend, sizeof(commend));
+    len = write(sock, command, sizeof(command));
     if(len < 0)
     {
-        perror("Fail to send commend");
+        perror("Fail to send command");
         return -1;
     }
 
@@ -143,8 +175,8 @@ int request(char* commend)
 
     if(strncmp(token, "Approve", (size_t)len) == 0){
         printf("Approved!\n");
-        printf("Run commend: \'%s\'\n", commend);
-        system(commend);
+        printf("Run command: \'%s\'\n", command);
+        system(command);
     }
     else if(strncmp(token, "Deny", (size_t)len) == 0){
         printf("Denied!\n");
@@ -152,7 +184,7 @@ int request(char* commend)
     }
     else if(strncmp(token, "Pending", (size_t)len) == 0){
         printf("Pending!\n");
-        printf("Run apsudo --ls-pending to see approved commend.\n");
+        printf("Run apsudo --ls-pending to see approved command.\n");
     }
     else{
         printf("Token is broken.");
