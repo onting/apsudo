@@ -63,12 +63,12 @@ int init()
     printf("Enter the IP Address >> ");
     scanf("%s", ip_addr);
     printf("Enter the Port number >> ");
-    scanf("%d", port_num);
+    scanf("%d", &port_num);
 
     fptr = fopen("apsudo.config", "w");
     fprintf(fptr, "%s:%d", ip_addr, port_num);
     fclose(fptr);
-    
+
     return 0;
 }
 
@@ -81,7 +81,7 @@ int request(char* commend)
     char temp[32];
     char* tok;
     int port_num;
-    struct sockadd_in server_addr;
+    struct sockaddr_in server_addr;
     FILE *fptr;
 
     if(access("apsudo.config", F_OK) == -1){
@@ -146,11 +146,11 @@ int request(char* commend)
         printf("Run commend: \'%s\'\n", commend);
         system(commend);
     }
-    else if(strcmp(token, "Deny", (size_t)len) == 0){
+    else if(strncmp(token, "Deny", (size_t)len) == 0){
         printf("Denied!\n");
         printf("Contect to administrater.\n");
     }
-    else if(strcmp(token, "Pending", (size_t)len) == 0){
+    else if(strncmp(token, "Pending", (size_t)len) == 0){
         printf("Pending!\n");
         printf("Run apsudo --ls-pending to see approved commend.\n");
     }
@@ -159,5 +159,15 @@ int request(char* commend)
         return -1;
     }
 
+    return 0;
+}
+
+int ls_pending()
+{
+    return 0;
+}
+
+int run()
+{
     return 0;
 }
