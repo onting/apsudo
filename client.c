@@ -111,6 +111,7 @@ int request(char* command)
     char token[BUF_SIZE];
     char ip_addr[16];
     char temp[32];
+    char quary[64];
     char* tok;
     int port_num;
     struct sockaddr_in server_addr;
@@ -157,7 +158,10 @@ int request(char* command)
         return -1;
     }
 
-    len = write(sock, command, sizeof(command));
+    strcpy(quary, "request:");
+    strcat(quary, command);
+
+    len = write(sock, quary, sizeof(quary));
     if(len < 0)
     {
         perror("Fail to send command");
@@ -196,10 +200,157 @@ int request(char* command)
 
 int ls_pending()
 {
+    const char *quary;
+    int sock;
+    ssize_t len;
+    char token[BUF_SIZE];
+    char ip_addr[16];
+    char temp[32];
+    char* tok;
+    int port_num;
+    struct sockaddr_in server_addr;
+    FILE *fptr;
+
+    if(access("apsudo.config", F_OK) == -1){
+        printf("Run \'apsudo --init\' first.\n");
+        return -1;
+    }
+
+    fptr = fopen("apsudo.config", "r");
+    fgets(temp, sizeof(temp), fptr);
+    tok = strtok(temp, ":");
+    if(!tok){
+        printf("apsudo.config is broken.\n");
+        printf("To recover run \'apsudo --init\' command.\n");
+        return -1;
+    }
+    strcpy(ip_addr, tok);
+    tok = strtok(NULL, ":");
+    if(!tok){
+        printf("apsudo.config is broken.\n");
+        printf("To recover run \'apsudo --init\' command.\n");
+        return -1;
+    }
+    port_num = atoi(tok);
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0)
+    {
+        perror("Fail to create socket");
+        return -1;
+    }
+
+    memset(&server_addr, 0, sizeof(server_addr));
+
+    server_addr.sin_family = PF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(ip_addr);
+    server_addr.sin_port = htons(port_num);
+    
+    if(connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
+    {
+        perror("Can't connect to server");
+        return -1;
+    }
+
+    quary = "ls_pending:approve";
+    len = write(sock, quary, strlen(quary));
+    if(len < 0)
+    {
+        perror("Fail to send command");
+        return -1;
+    }
+
+    printf("Approved: \n");
+    while((len = read(sock, token, sizeof(token))) > 0)
+    {
+        printf("%s", token);
+    }
+
+    quary = "ls_pending:pending";
+    len = write(sock, quary, strlen(quary));
+    if(len < 0)
+    {
+        perror("Fail to send command");
+        return -1;
+    }
+
+    printf("Pending: \n");
+    while((len = read(sock, token, sizeof(token))) > 0)
+    {
+        printf("%s", token);
+    }
+    
+    close(sock);
+
     return 0;
 }
 
 int run()
 {
+    const char *quary = "run:";
+    int sock;
+    ssize_t len;
+    char token[BUF_SIZE];
+    char ip_addr[16];
+    char temp[32];
+    char* tok;
+    int port_num;
+    struct sockaddr_in server_addr;
+    FILE *fptr;
+
+    if(access("apsudo.config", F_OK) == -1){
+        printf("Run \'apsudo --init\' first.\n");
+        return -1;
+    }
+
+    fptr = fopen("apsudo.config", "r");
+    fgets(temp, sizeof(temp), fptr);
+    tok = strtok(temp, ":");
+    if(!tok){
+        printf("apsudo.config is broken.\n");
+        printf("To recover run \'apsudo --init\' command.\n");
+        return -1;
+    }
+    strcpy(ip_addr, tok);
+    tok = strtok(NULL, ":");
+    if(!tok){
+        printf("apsudo.config is broken.\n");
+        printf("To recover run \'apsudo --init\' command.\n");
+        return -1;
+    }
+    port_num = atoi(tok);
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0)
+    {
+        perror("Fail to create socket");
+        return -1;
+    }
+
+    memset(&server_addr, 0, sizeof(server_addr));
+
+    server_addr.sin_family = PF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(ip_addr);
+    server_addr.sin_port = htons(port_num);
+    
+    if(connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
+    {
+        perror("Can't connect to server");
+        return -1;
+    }
+
+    len = write(sock, quary, strlen(quary));
+    if(len < 0)
+    {
+        perror("Fail to send command");
+        return -1;
+    }
+
+    printf("Approved: \n");
+    while((len = read(sock, token, sizeof(token))) > 0)
+    {
+        printf("%s", token);
+    }
+
     return 0;
 }
