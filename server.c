@@ -183,9 +183,9 @@ void init(GTree* ruleTree)
         exit(EXIT_FAILURE);
     while(fgets(temp, sizeof(temp), fptr))
     {
-        tok = strtok(temp, " ");
+        tok = strtok(temp, "\t");
         strncpy(program, tok, sizeof(program));
-        tok = strtok(NULL, " ");
+        tok = strtok(NULL, "\t");
         strncpy(permission, tok, sizeof(permission));
         g_tree_insert(ruleTree, program, permission);
     }
