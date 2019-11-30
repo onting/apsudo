@@ -7,8 +7,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <gmodule.h>
+#include <stdlib.h>
 
-#define BUF_SIZE 32
+#define BUF_SIZE 64
 #define DEFAULT_PORTNUM 2003
 
 gint CompareNames (gconstpointer name1, gconstpointer name2)
@@ -44,8 +45,8 @@ int main()
     int port_num;
     socklen_t client_len;
     int len;
-    char operation[16];
-    char operation_arg[16];
+    char operation[32];
+    char operation_arg[32];
     char *tok;
     FILE* fptr;
     GTree* ruleTree = g_tree_new(CompareNames);
@@ -95,16 +96,16 @@ int main()
         tok = strtok(buffer, ":");
         strncpy(operation, tok, sizeof(operation));
         tok = strtok(NULL, ":");
-        strncpy(operation_arg, ":", sizeof(operation_arg));
+        strncpy(operation_arg, tok, sizeof(operation_arg));
 
         if(strncmp(operation, "request", sizeof(operation)) == 0)
         {
             for(i=0; operation_arg[i] && (operation_arg[i] != ' '); i++){
                 temp[i] = operation_arg[i];
+                temp[i+1] = 0;
             }
-            temp[i] = 0;
             sptr = g_tree_search(ruleTree, CompareNames, (gconstpointer)temp);
-            if(sptr){ //program rule is found
+            if(sptr != NULL){ //program rule is found
                 strncpy(buffer, sptr, sizeof(buffer));
                 if(strncmp(buffer, "Pend", sizeof(buffer)) == 0){
                     g_queue_push_tail(q_pending, operation_arg); //push command to pending queue
@@ -173,20 +174,23 @@ int main()
 void init(GTree* ruleTree)
 {
     FILE* fptr;
-    char program[20];
-    char permission[20];
+    char* program;
+    char* permission;
     char *tok;
     char temp[40];
+    int i;
     
     fptr = fopen("rule.table", "r");
     if(fptr == NULL)
         exit(EXIT_FAILURE);
     while(fgets(temp, sizeof(temp), fptr))
     {
-        tok = strtok(temp, "\t");
-        strncpy(program, tok, sizeof(program));
-        tok = strtok(NULL, "\t");
-        strncpy(permission, tok, sizeof(permission));
+        tok = strtok(temp, " ");
+        program = malloc(strlen(tok) + 1);
+        strcpy(program, tok);
+        tok = strtok(NULL, " ");
+        permission = malloc(strlen(tok) + 1);
+        strcpy(permission, tok);
         g_tree_insert(ruleTree, program, permission);
     }
     fclose(fptr);
