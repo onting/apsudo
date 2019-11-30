@@ -177,21 +177,22 @@ int request(char* command)
     
     close(sock);
 
-    if(strncmp(token, "Approve", (size_t)len) == 0){
+    if(strncmp(token, "Approve", sizeof(token)) == 0){
         printf("Approved!\n");
         printf("Run command: \'%s\'\n", command);
         system(command);
     }
-    else if(strncmp(token, "Deny", (size_t)len) == 0){
+    else if(strncmp(token, "Deny", sizeof(token)) == 0){
         printf("Denied!\n");
         printf("Contect to administrater.\n");
     }
-    else if(strncmp(token, "Pending", (size_t)len) == 0){
+    else if(strncmp(token, "Pend", sizeof(token)) == 0){
         printf("Pending!\n");
         printf("Run apsudo --ls-pending to see approved command.\n");
     }
     else{
-        printf("Token is broken.");
+        printf("token: %s\n", token);
+        printf("Token is broken.\n");
         return -1;
     }
 
