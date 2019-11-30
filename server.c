@@ -31,7 +31,7 @@ int main()
     }
 
     if(pid > 0)
-        exit(EXIT_SUCESS);
+        exit(EXIT_SUCCESS);
 
     /*child*/
     if(setsid() < 0)
@@ -50,7 +50,7 @@ int main()
     FILE* fptr;
     GTree* ruleTree = g_tree_new(CompareNames);
     GQueue* q_approve = g_queue_new();
-    GQueue* q_pending = q_queue_new();
+    GQueue* q_pending = g_queue_new();
     int i;
     char *sptr;
 
@@ -71,7 +71,7 @@ int main()
 
     memset(&server_addr, 0, sizeof(server_addr));
 
-    server_addr.sin_familiy = AF_INET;
+    server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     server_addr.sin_port = htons(port_num);
 
@@ -84,11 +84,11 @@ int main()
     client_len = sizeof(client_addr);
     while(1)
     {
-        client_fd = accept(server_addr, (struct sockaddr*)&client_addr, &len);
+        client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &len);
         if(client_fd < 0)
             exit(EXIT_FAILURE);
         
-        len = read(clinet_fd, buffer, sizeof(buffer));
+        len = read(client_fd, buffer, sizeof(buffer));
         if(len < 0)
             exit(EXIT_FAILURE);
         
@@ -123,7 +123,7 @@ int main()
                     write(client_fd, "", 0);
                 }
                 else{
-                    for(i = 0; sptr = g_queue_peek_nth(q_approve, i), i++){
+                    for(i = 0; sptr = g_queue_peek_nth(q_approve, i); i++){
                         write(client_fd, sptr, strlen(sptr));
                     }
                 }
@@ -134,7 +134,7 @@ int main()
                     write(client_fd, "", 0);
                 }
                 else{
-                    for(i = 0; sptr = g_queue_peek_nth(q_pending, i), i++){
+                    for(i = 0; sptr = g_queue_peek_nth(q_pending, i); i++){
                         write(client_fd, sptr, strlen(sptr));
                     }
                 }
@@ -151,7 +151,7 @@ int main()
                     write(client_fd, "", 0);
             }
             else{
-                for(i = 0; sptr = g_queue_peek_nth(q_pending, i), i++){
+                for(i = 0; sptr = g_queue_peek_nth(q_pending, i); i++){
                     write(client_fd, sptr, strlen(sptr));
                 }
             }
@@ -162,7 +162,7 @@ int main()
             write(client_fd, buffer, strnlen(buffer, sizeof(buffer)));
         }
 
-        close(client_addr);
+        close(client_fd);
     }
 
     close(server_fd);
