@@ -23,20 +23,20 @@ int main()
 {
     pid_t pid;
 
-    pid = fork();
+    // pid = fork();
 
-    if(pid < 0)
-    {
-        perror("Daemon Create Fail");
-        exit(EXIT_FAILURE);
-    }
+    // if(pid < 0)
+    // {
+    //     perror("Daemon Create Fail");
+    //     exit(EXIT_FAILURE);
+    // }
 
-    if(pid > 0)
-        exit(EXIT_SUCCESS);
+    // if(pid > 0)
+    //     exit(EXIT_SUCCESS);
 
-    /*child*/
-    if(setsid() < 0)
-        exit(EXIT_FAILURE);
+    // /*child*/
+    // if(setsid() < 0)
+    //     exit(EXIT_FAILURE);
 
     char buffer[BUF_SIZE];
     struct sockaddr_in server_addr, client_addr;
@@ -114,53 +114,54 @@ int main()
             else{ //program rule is not found
                 strncpy(buffer, "Deny", sizeof(buffer));
             }
-            write(client_fd, buffer, strnlen(buffer, sizeof(buffer)));
+            printf("%s\n", buffer);
+            write(client_fd, buffer, strnlen(buffer, sizeof(buffer)) + 1);
         }
         else if(strncmp(operation, "ls_pending", sizeof(operation)) == 0)
         {
             if(strncmp(operation_arg, "approve", sizeof(operation_arg)) == 0)
             {
                 if(g_queue_is_empty(q_approve)){
-                    write(client_fd, "", 0);
+                    write(client_fd, "", 1);
                 }
                 else{
                     for(i = 0; sptr = g_queue_peek_nth(q_approve, i); i++){
-                        write(client_fd, sptr, strlen(sptr));
+                        write(client_fd, sptr, strlen(sptr) + 1);
                     }
                 }
             }
             else if(strncmp(operation_arg, "pending", sizeof(operation_arg)) == 0)
             {
                 if(g_queue_is_empty(q_pending)){
-                    write(client_fd, "", 0);
+                    write(client_fd, "", 1);
                 }
                 else{
                     for(i = 0; sptr = g_queue_peek_nth(q_pending, i); i++){
-                        write(client_fd, sptr, strlen(sptr));
+                        write(client_fd, sptr, strlen(sptr) + 1);
                     }
                 }
             }
             else
             {
                 strncpy(buffer, "Wrong argument", sizeof(buffer));
-                write(client_fd, buffer, strnlen(buffer, sizeof(buffer)));
+                write(client_fd, buffer, strnlen(buffer, sizeof(buffer)) + 1);
             }
         }
         else if(strncmp(operation, "run", sizeof(operation)) == 0)
         {
             if(g_queue_is_empty(q_pending)){
-                    write(client_fd, "", 0);
+                    write(client_fd, "", 1);
             }
             else{
                 for(i = 0; sptr = g_queue_peek_nth(q_pending, i); i++){
-                    write(client_fd, sptr, strlen(sptr));
+                    write(client_fd, sptr, strlen(sptr) + 1);
                 }
             }
         }
         else
         {
             strncpy(buffer, "Unspecified operation", sizeof(buffer));
-            write(client_fd, buffer, strnlen(buffer, sizeof(buffer)));
+            write(client_fd, buffer, strnlen(buffer, sizeof(buffer)) + 1);
         }
 
         close(client_fd);
@@ -169,6 +170,15 @@ int main()
     close(server_fd);
 
     return 0;
+}
+
+gint TraverseTree (gpointer key, gpointer value, gpointer data)
+{       
+        char    *sKey = key;
+        char    *sValue = value;
+        
+        g_print ("Key: %s,  Value: %s\n", sKey, sValue);
+        return FALSE;
 }
 
 void init(GTree* ruleTree)
@@ -190,8 +200,11 @@ void init(GTree* ruleTree)
         strcpy(program, tok);
         tok = strtok(NULL, " ");
         permission = malloc(strlen(tok) + 1);
+        tok = strtok(tok, "\n");
         strcpy(permission, tok);
         g_tree_insert(ruleTree, program, permission);
     }
     fclose(fptr);
+
+    g_tree_traverse(ruleTree, TraverseTree, G_IN_ORDER, NULL);
 }
