@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     static struct option long_options[] =
     {
         {"init", no_argument, 0, 'i'},
-        {"ls_pending", no_argument, 0, 'l'},
+        {"ls-pending", no_argument, 0, 'l'},
         {"run", no_argument, 0, 'r'},
         {0, 0, 0, 0}
     };
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
         case 'r':
         operation = RUN; break;
         case '?':
-        break;
+        return -1;
         default:
         operation = REQUEST;
     }
@@ -161,7 +161,7 @@ int request(char* command)
     strcpy(quary, "request:");
     strcat(quary, command);
 
-    len = write(sock, quary, sizeof(quary));
+    len = write(sock, quary, strnlen(quary, sizeof(quary)));
     if(len < 0)
     {
         perror("Fail to send command");
@@ -254,7 +254,7 @@ int ls_pending()
     }
 
     quary = "ls_pending:approve";
-    len = write(sock, quary, strlen(quary));
+    len = write(sock, quary, strlen(quary) + 1);
     if(len < 0)
     {
         perror("Fail to send command");
@@ -268,7 +268,7 @@ int ls_pending()
     }
 
     quary = "ls_pending:pending";
-    len = write(sock, quary, strlen(quary));
+    len = write(sock, quary, strlen(quary) + 1);
     if(len < 0)
     {
         perror("Fail to send command");
@@ -340,7 +340,7 @@ int run()
         return -1;
     }
 
-    len = write(sock, quary, strlen(quary));
+    len = write(sock, quary, strlen(quary) + 1);
     if(len < 0)
     {
         perror("Fail to send command");
