@@ -36,7 +36,7 @@ int main()
 
     /*child*/
     if(setsid() < 0)
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);  
 
     char buffer[BUF_SIZE];
     struct sockaddr_in server_addr, client_addr;
@@ -107,8 +107,11 @@ int main()
             sptr = g_tree_lookup(ruleTree, (gconstpointer)temp);
             if(sptr != NULL){ //program rule is found
                 strncpy(buffer, sptr, sizeof(buffer));
-                if(strncmp(buffer, "Pend", sizeof(buffer)) == 0){
-                    g_queue_push_tail(q_pending, operation_arg); //push command to pending queue
+                if(strncmp(buffer, "Pend", sizeof(buffer)) == 0)
+                {
+                    sptr = malloc(strnlen(operation_arg, sizeof(operation_arg)) + 1);
+                    strncpy(sptr, operation_arg, sizeof(operation_arg));
+                    g_queue_push_tail(q_pending, sptr); //push command to pending queue
                 }
             }
             else{ //program rule is not found
